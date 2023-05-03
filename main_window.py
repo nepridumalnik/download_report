@@ -5,7 +5,15 @@ from tkcalendar import DateEntry
 
 
 class MainWindow:
+    '''
+    Класс главного окна
+    '''
+
     def __init__(self) -> None:
+        '''
+        Конструктор
+        '''
+
         self.root = tk.Tk()
         self.root.title('Выбор даты и файла')
 
@@ -33,12 +41,23 @@ class MainWindow:
         select_button.pack()
 
     def run(self) -> None:
+        '''
+        Запуск основного цикла
+        '''
+
         self.root.mainloop()
 
     def __select_file(self) -> None:
+        '''
+        Обработка нажатия кнопки
+        '''
+
         if self.date_entry_start.get_date() > self.date_entry_end.get_date():
-            mb.showerror(
-                'Ошибка', f'Дата начала {str(self.date_entry_start.get_date()).replace("-", ".")} больше даты конца {str(self.date_entry_end.get_date())}'.replace("-", "."))
+            start: str = str(self.date_entry_start.get_date()
+                             ).replace('-', '.')
+            end: str = str(self.date_entry_end.get_date()).replace('-', '.')
+            error_text: str = f'Дата начала {start} больше даты конца {end}'
+            mb.showerror('Ошибка', error_text)
             return
 
         file_path = fd.askopenfilename()

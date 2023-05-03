@@ -10,10 +10,18 @@ XLSM_FILE: str = 'C:/Users/nepri/Рабочий стол/Водный балан
 
 
 def is_sheet_valid(sheet) -> bool:
+    '''
+    Проверка валидности листа
+    '''
+
     return sheet['A1'].value == '№\nп/п'
 
 
 def connect() -> None:
+    '''
+    Подключение к базе данных
+    '''
+
     # con = pyodbc.connect(CONNECTION)
 
     # cursor = con.cursor()
@@ -47,7 +55,11 @@ def connect() -> None:
         print(f'Sheet \'{sheet_name}\' is valid')
 
 
-if __name__ == '__main__':
+def main() -> None:
+    '''
+    Основная функция
+    '''
+
     try:
         window = MainWindow()
         window.run()
@@ -55,3 +67,11 @@ if __name__ == '__main__':
         # connect()
     except Exception as e:
         print(e)
+
+
+if __name__ == '__main__':
+    '''
+    Запускать только если это основной модуль
+    '''
+
+    main()
