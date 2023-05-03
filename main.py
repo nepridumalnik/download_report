@@ -1,8 +1,7 @@
+from main_window import MainWindow
+
 import pyodbc
 import openpyxl
-import tkinter as tk
-from tkinter import filedialog
-from tkcalendar import DateEntry
 
 CONNECTION: str = 'Driver={SQL Server};Server=10.1.1.7;Uid=dudnik; Pwd=tvk2022dud;'
 
@@ -48,44 +47,11 @@ def connect() -> None:
         print(f'Sheet \'{sheet_name}\' is valid')
 
 
-def select_file():
-    file_path = filedialog.askopenfilename()
-    print("Выбранный файл: ", file_path)
-
-
-def create_window() -> None:
-    root = tk.Tk()
-    root.title("Выбор даты и файла")
-
-    # Создаем фрейм для первой строки
-    top_frame = tk.Frame(root)
-    top_frame.pack()
-
-    # Создаем два элемента ввода даты
-    date1_label = tk.Label(top_frame, text="Дата 1:")
-    date1_label.pack(side=tk.LEFT)
-    date1_entry = DateEntry(top_frame, width=12, background='darkblue',
-                            foreground='white', borderwidth=2, locale='ru_RU')
-    date1_entry.pack(side=tk.LEFT, padx=5)
-    date2_label = tk.Label(top_frame, text="Дата 2:")
-    date2_label.pack(side=tk.LEFT)
-    date2_entry = DateEntry(top_frame, width=12, background='darkblue',
-                            foreground='white', borderwidth=2, locale='ru_RU')
-    date2_entry.pack(side=tk.LEFT, padx=5)
-
-    # Создаем кнопку "Выбрать файл" во второй строке
-    bottom_frame = tk.Frame(root)
-    bottom_frame.pack(pady=10)
-    select_button = tk.Button(
-        bottom_frame, text="Выбрать файл", command=select_file)
-    select_button.pack()
-
-    root.mainloop()
-
-
 if __name__ == '__main__':
     try:
-        create_window()
+        window = MainWindow()
+        window.run()
+
         # connect()
     except Exception as e:
         print(e)
