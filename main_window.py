@@ -13,9 +13,18 @@ from database import extract_dict
 Интерфейс и работа с ним
 '''
 
+NUM_COLUMN: str = 'A'
+VOL_COLUMN: str = 'K'
+DESC_COLUMN: str = 'L'
+
 NUM_CELL: str = 'A1'
 FIAS_CELL: str = 'I1'
-DESC_CELL: str = 'L1'
+DESC_CELL: str = f'{DESC_COLUMN}1'
+
+NUM_INDEX: int = 1
+FIAS_INDEX: int = 9
+VOLUME_INDEX: int = 11
+DESC_INDEX: int = 12
 
 
 class MainWindow:
@@ -83,9 +92,9 @@ class MainWindow:
         Очистить лист
         '''
 
-        for row in worksheet.iter_rows(min_row=2, min_col=11, max_col=12):
+        for row in worksheet.iter_rows(min_row=2, min_col=VOLUME_INDEX, max_col=DESC_INDEX):
             for cell in row:
-                cell.value = ''
+                cell.value = None
 
     def __handle_sheet(self, worksheet, dictionary) -> None:
         '''
@@ -97,9 +106,43 @@ class MainWindow:
         # Подготовка
         self.__clean_sheet(worksheet)
 
-        # num_rows: int = len(list(worksheet['A']))
+        total_values: dict = dict()
+        total_sum: float = 0
 
-        totals: dict = dict()
+        for row in worksheet.iter_rows(min_row=2, min_col=FIAS_INDEX, max_col=DESC_INDEX):
+            if not row[0].value or not dictionary.__contains__(row[0].value):
+                continue
+
+            current_total: float = 0
+
+            for key, val in dictionary[row[0].value]:
+                if not total_values.__contains__(key):
+                    total_values[key]: float = 0
+
+                total_values[key] += val
+                current_total += val
+
+            row[2].value = current_total
+            row[3].value = str(dictionary[row[0].value])
+
+            total_sum += current_total
+
+        num_rows = worksheet.max_row
+        for row in range(num_rows, 1, -1):
+            if worksheet.cell(row=row, column=NUM_INDEX).value:
+                num_rows = row + 1
+                break
+
+        worksheet[f'{VOL_COLUMN}{num_rows}'].value = total_sum
+        worksheet[f'{DESC_COLUMN}{num_rows}'].value = 'Итого'
+
+        num_rows += 1
+        count: int = 0
+
+        for key, val in total_values.items():
+            worksheet[f'{VOL_COLUMN}{num_rows + count}'].value = val
+            worksheet[f'{DESC_COLUMN}{num_rows + count}'].value = key
+            count += 1
 
     def __handle_dict(self, dictionary, workbook) -> None:
         '''
@@ -143,6 +186,7 @@ class MainWindow:
             self.__handle_dict(dictionary, workbook)
 
             workbook.save(path)
+            mb.showinfo('Уведомление', 'Обработка файла завершена успешно!')
 
         except Exception as e:
             mb.showerror('Ошибка', e)
