@@ -13,6 +13,10 @@ from database import extract_dict
 Интерфейс и работа с ним
 '''
 
+NUM_CELL: str = 'A1'
+FIAS_CELL: str = 'I1'
+DESC_CELL: str = 'L1'
+
 
 class MainWindow:
     '''
@@ -63,16 +67,25 @@ class MainWindow:
         sheet - лист excel
         '''
 
-        if not str(sheet['A1'].value).startswith('№'):
+        if not str(sheet[NUM_CELL].value).startswith('№'):
             return False
 
-        if not str(sheet['I1'].value) == 'ФИАС':
+        if not str(sheet[FIAS_CELL].value) == 'ФИАС':
             return False
 
-        if not str(sheet['L1'].value) == 'Расшифровка':
+        if not str(sheet[DESC_CELL].value) == 'Расшифровка':
             return False
 
         return True
+
+    def __clean_sheet(self, worksheet) -> None:
+        '''
+        Очистить лист
+        '''
+
+        for row in worksheet.iter_rows(min_row=2, min_col=11, max_col=12):
+            for cell in row:
+                cell.value = ''
 
     def __handle_sheet(self, worksheet, dictionary) -> None:
         '''
@@ -81,16 +94,19 @@ class MainWindow:
         dictionary - словарь
         '''
 
-        pass
+        # Подготовка
+        self.__clean_sheet(worksheet)
 
-    def __handle_dict(self, dictionary, path: str) -> None:
+        # num_rows: int = len(list(worksheet['A']))
+
+        totals: dict = dict()
+
+    def __handle_dict(self, dictionary, workbook) -> None:
         '''
         Обработать словарь
         dictionary - словарь
         path - путь до файла
         '''
-
-        workbook = openpyxl.load_workbook(path)
 
         for sheet_name in workbook.sheetnames:
             worksheet = workbook[sheet_name]
@@ -98,7 +114,6 @@ class MainWindow:
             if not self.__is_sheet_valid(worksheet):
                 continue
 
-            print(f'Sheet \'{sheet_name}\' is valid')
             self.__handle_sheet(worksheet, dictionary)
 
     def __select_file(self) -> None:
@@ -117,14 +132,18 @@ class MainWindow:
 
         try:
             path: str = fd.askopenfilename()
-            print('Выбранный файл: ', path)
+            workbook = openpyxl.load_workbook(
+                path, read_only=False, keep_vba=True)
 
             start: str = str(self.date_entry_start.get_date()
                              ).replace('-', '.')
             end: str = str(self.date_entry_end.get_date()).replace('-', '.')
             dictionary = extract_dict(start, end)
 
-            self.__handle_dict(dictionary, path)
+            self.__handle_dict(dictionary, workbook)
+
+            workbook.save(path)
+
         except Exception as e:
             mb.showerror('Ошибка', e)
             print(e)
