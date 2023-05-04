@@ -94,6 +94,7 @@ class MainWindow:
 
         for row in worksheet.iter_rows(min_row=2, min_col=VOLUME_INDEX, max_col=DESC_INDEX):
             for cell in row:
+                # Присваевается нулевое значение ячейке
                 cell.value = None
 
     def __handle_sheet(self, worksheet, dictionary) -> None:
@@ -103,18 +104,25 @@ class MainWindow:
         dictionary - словарь
         '''
 
-        # Подготовка
+        # Подготовка листа к заполнению
         self.__clean_sheet(worksheet)
 
-        total_values: dict = dict()
+        # Итоговая сумма
         total_sum: float = 0
 
+        # Суммы расширений
+        total_values: dict = dict()
+
+        # Заполнение листа
         for row in worksheet.iter_rows(min_row=2, min_col=FIAS_INDEX, max_col=DESC_INDEX):
+            # Пропускаем пустые ФИАСы
             if not row[0].value or not dictionary.__contains__(row[0].value):
                 continue
 
+            # Итоговая сумма для ФИАСа
             current_total: float = 0
 
+            # Обходим по итератору словарь с ФИАСами
             for key, val in dictionary[row[0].value]:
                 if not total_values.__contains__(key):
                     total_values[key]: float = 0
@@ -122,20 +130,28 @@ class MainWindow:
                 total_values[key] += val
                 current_total += val
 
+            # Заполняем ячейку объёма
             row[2].value = current_total
+
+            # Заполняем ячейку расшифровки
             row[3].value = str(dictionary[row[0].value])
 
+            # Считаем итоговую сумму
             total_sum += current_total
 
+        # Поиск последней строки в первом столбце, идём с конца "А" столбца по всем ячейкам
+        # Этот костыль необходимое зло
         num_rows = worksheet.max_row
-        for row in range(num_rows, 1, -1):
+        for row in range(num_rows, NUM_INDEX, -1):
             if worksheet.cell(row=row, column=NUM_INDEX).value:
                 num_rows = row + 1
                 break
 
+        # Запись итогового результата
         worksheet[f'{VOL_COLUMN}{num_rows}'].value = total_sum
         worksheet[f'{DESC_COLUMN}{num_rows}'].value = 'Итого'
 
+        # Запись суммарных значений атрибутов
         num_rows += 1
         count: int = 0
 
@@ -151,12 +167,15 @@ class MainWindow:
         path - путь до файла
         '''
 
+        # Обходим все листы в файле
         for sheet_name in workbook.sheetnames:
             worksheet = workbook[sheet_name]
 
+            # Если лист не подходит критериям, пропускаем его
             if not self.__is_sheet_valid(worksheet):
                 continue
 
+            # Обработка листа
             self.__handle_sheet(worksheet, dictionary)
 
     def __select_file(self) -> None:
@@ -175,6 +194,12 @@ class MainWindow:
 
         try:
             path: str = fd.askopenfilename()
+
+            # Если был отменён ввод, пропускаем
+            if not path:
+                return
+
+            # Открываем для записи с поддержкой макросов для корректного сохранения файлов
             workbook = openpyxl.load_workbook(
                 path, read_only=False, keep_vba=True)
 
@@ -189,5 +214,6 @@ class MainWindow:
             mb.showinfo('Уведомление', 'Обработка файла завершена успешно!')
 
         except Exception as e:
+            # Вывод текста исключения как ошибки
             mb.showerror('Ошибка', e)
             print(e)

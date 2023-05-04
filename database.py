@@ -6,6 +6,10 @@ import pyodbc
 Работа с базой данных
 '''
 
+FIAS_INDEX: int = 1
+DESCRIPTION_INDEX: int = 2
+VALUE_INDEX: int = 4
+
 
 class FiasData:
     '''
@@ -18,7 +22,7 @@ class FiasData:
         '''
 
         # Расшифровка
-        self.descriptions: dict = dict()
+        self.__descriptions: dict = dict()
 
     def append(self, description: str, volume: float) -> None:
         '''
@@ -27,14 +31,14 @@ class FiasData:
         volume - значение
         '''
 
-        self.descriptions[description] = volume
+        self.__descriptions[description] = volume
 
     def __iter__(self):
         '''
         Получаем итератор для описания
         '''
 
-        return iter(self.descriptions.items())
+        return iter(self.__descriptions.items())
 
     def __str__(self) -> str:
         '''
@@ -43,6 +47,7 @@ class FiasData:
 
         output: str = ''
 
+        # Форматируем расшифровку
         for key, val in self:
             output += f'{key}: {val}\n'
 
@@ -53,45 +58,30 @@ class FiasData:
         return output
 
 
-def extract_value(input: str) -> float:
-    '''
-    Извлечь кубометры из input
-    input - строка в формате Decimal('30.000')
-    '''
-
-    start_len: int = 9
-    end_len: int = 2
-
-    tmp: str = input[start_len: -end_len]
-    value: float = float(tmp)
-
-    return value
-
-
 def convert_rows_to_dict(rows) -> dict:
     '''
     Конвертировать строку из СУБД в словарь
     rows - строки
     '''
 
-    FIAS_INDEX: int = 1
-    DESCRIPTION_INDEX: int = 2
-    VALUE_INDEX: int = 4
-
     dictionary: dict = dict()
 
+    # Извлекаем данные из строк и записываем в словарь
     for row in rows:
         fias = row[FIAS_INDEX]
 
+        # Пропускаем нулевые значения
         if not fias:
             continue
 
         desc = row[DESCRIPTION_INDEX]
         val = float(row[VALUE_INDEX])
 
+        # Добавляем ФИАС, если не существует
         if not dictionary.__contains__(fias):
             dictionary[fias] = FiasData()
 
+        # Добавляем расшифровку для ФИАСа
         dictionary[fias].append(desc, val)
 
     return dictionary
