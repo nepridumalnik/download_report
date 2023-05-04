@@ -203,9 +203,11 @@ class MainWindow:
             workbook = openpyxl.load_workbook(
                 path, read_only=False, keep_vba=True)
 
-            start: str = str(self.date_entry_start.get_date()
-                             ).replace('-', '.')
-            end: str = str(self.date_entry_end.get_date()).replace('-', '.')
+            date_start = self.date_entry_start.get_date()
+            date_end = self.date_entry_end.get_date()
+
+            start: str = f'{date_start.day:02d}.{date_start.month:02d}.{date_start.year}'
+            end: str = f'{date_end.day:02d}.{date_end.month:02d}.{date_end.year}'
             dictionary = extract_dict(start, end)
 
             self.__handle_dict(dictionary, workbook)
