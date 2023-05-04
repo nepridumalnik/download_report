@@ -8,6 +8,7 @@ import pyodbc
 
 FIAS_INDEX: int = 1
 DESCRIPTION_INDEX: int = 2
+STATUS_INDEX: int = 3
 VALUE_INDEX: int = 4
 
 
@@ -76,13 +77,14 @@ def convert_rows_to_dict(rows) -> dict:
 
         desc = row[DESCRIPTION_INDEX]
         val = float(row[VALUE_INDEX])
+        status = row[STATUS_INDEX]
 
         # Добавляем ФИАС, если не существует
         if not dictionary.__contains__(fias):
             dictionary[fias] = FiasData()
 
         # Добавляем расшифровку для ФИАСа
-        dictionary[fias].append(desc, val)
+        dictionary[fias].append(f'{desc}.{status} м3', val)
 
     return dictionary
 
