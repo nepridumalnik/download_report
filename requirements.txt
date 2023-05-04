@@ -1,0 +1,4 @@
+pyodbc
+openpyxl
+tkinter
+tkcalendar
