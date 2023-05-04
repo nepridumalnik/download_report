@@ -1,7 +1,17 @@
+# _*_ coding: utf-8 _*_
+
 import tkinter as tk
 import tkinter.filedialog as fd
 import tkinter.messagebox as mb
 from tkcalendar import DateEntry
+
+import openpyxl
+
+from database import extract_dict
+
+'''
+Интерфейс и работа с ним
+'''
 
 
 class MainWindow:
@@ -47,11 +57,56 @@ class MainWindow:
 
         self.root.mainloop()
 
+    def __is_sheet_valid(self, sheet) -> bool:
+        '''
+        Проверка валидности листа
+        sheet - лист excel
+        '''
+
+        if not str(sheet['A1'].value).startswith('№'):
+            return False
+
+        if not str(sheet['I1'].value) == 'ФИАС':
+            return False
+
+        if not str(sheet['L1'].value) == 'Расшифровка':
+            return False
+
+        return True
+
+    def __handle_sheet(self, worksheet, dictionary) -> None:
+        '''
+        Обработать лист
+        worksheet - лист
+        dictionary - словарь
+        '''
+
+        pass
+
+    def __handle_dict(self, dictionary, path: str) -> None:
+        '''
+        Обработать словарь
+        dictionary - словарь
+        path - путь до файла
+        '''
+
+        workbook = openpyxl.load_workbook(path)
+
+        for sheet_name in workbook.sheetnames:
+            worksheet = workbook[sheet_name]
+
+            if not self.__is_sheet_valid(worksheet):
+                continue
+
+            print(f'Sheet \'{sheet_name}\' is valid')
+            self.__handle_sheet(worksheet, dictionary)
+
     def __select_file(self) -> None:
         '''
         Обработка нажатия кнопки
         '''
 
+        # Если дата конца интервала позже даты начала, выдаём ошибку
         if self.date_entry_start.get_date() > self.date_entry_end.get_date():
             start: str = str(self.date_entry_start.get_date()
                              ).replace('-', '.')
@@ -60,5 +115,16 @@ class MainWindow:
             mb.showerror('Ошибка', error_text)
             return
 
-        file_path = fd.askopenfilename()
-        print('Выбранный файл: ', file_path)
+        try:
+            path: str = fd.askopenfilename()
+            print('Выбранный файл: ', path)
+
+            start: str = str(self.date_entry_start.get_date()
+                             ).replace('-', '.')
+            end: str = str(self.date_entry_end.get_date()).replace('-', '.')
+            dictionary = extract_dict(start, end)
+
+            self.__handle_dict(dictionary, path)
+        except Exception as e:
+            mb.showerror('Ошибка', e)
+            print(e)
